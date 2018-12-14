@@ -1,0 +1,26 @@
+name: browsers-vnc
+
+volumes:
+  tmpdir: '/tmp/.X11-unix'
+
+containers:
+  - name: xserver
+    image: oldwebtoday/vnc-ws-audio
+    ports:
+      vnc_port: 6080
+      cmd_port: 6082
+
+  - name: browser
+    image: oldwebtoday/base-browser
+    set_user_params: true
+    external_network: '${BROWSER_NET}'
+
+    environment:
+      DISPLAY: ':99'
+      PULSE_SERVER: '/tmp/.X11-unix/pulse-socket'
+
+      PROXY_HOST: '${PROXY_HOST}'
+      PROXY_PORT: '${PROXY_PORT}'
+      PROXY_GET_CA: 'http://wsgiprox/download/pem'
+
+

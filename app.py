@@ -16,14 +16,17 @@ import os
 import base64
 import json
 import traceback
+import time
 
 
 NETWORK_NAME = 'shep-browsers:{0}'
-FLOCKS = 'flocks.yaml'
+FLOCKS = 'flocks'
 
 DEFAULT_POOL = 'fixed-pool'
 
-DEFAULT_FLOCK = 'browsers-vnc'
+DEFAULT_FLOCK = os.environ.get('DEFAULT_FLOCK', 'browsers-vnc')
+
+AUTO_EVENT = 'wr.auto-event:{reqid}'
 
 
 # ============================================================================
@@ -212,7 +215,7 @@ def init_routes(app, browser_utils):
         height = request.args.get('height')
         audio = request.args.get('audio')
 
-        environ = {}
+        environ = {'REQ_ID': reqid}
         if width:
             environ['SCREEN_WIDTH'] = width
 
@@ -223,7 +226,7 @@ def init_routes(app, browser_utils):
             environ['AUDIO_TYPE'] = audio
 
         # vnc password
-        vnc_pass = 'secret'#base64.b64encode(os.urandom(21)).decode('utf-8')
+        vnc_pass = base64.b64encode(os.urandom(21)).decode('utf-8')
         environ['VNC_PASS'] = vnc_pass
 
         res = app.get_pool(DEFAULT_POOL).start(reqid, environ=environ)
@@ -299,7 +302,7 @@ def init_routes(app, browser_utils):
         Query params can be used to filter on metadata properties
         """
         res = browser_utils.load_avail_browsers(request.args)
-        return Response(json.dumps(res), mimetype='application/json')
+        return to_json(res)
 
     @app.route('/browsers/<name>/icon')
     def get_browser_icon(name):
@@ -312,6 +315,39 @@ def init_routes(app, browser_utils):
 
         return Response(base64.b64decode(res['icon'].split(',', 1)[-1]),
                         mimetype='image/png')
+
+
+    @app.route('/api/behavior/start/<reqid>', methods=['POST'])
+    def auto_start(reqid):
+        count = app.shepherd.redis.publish(AUTO_EVENT.format(reqid=reqid), json.dumps({'cmd': 'start'}))
+        if count:
+            return to_json({'success': True})
+
+        res = app.get_pool(DEFAULT_POOL).start_deferred_container(reqid, 'autodriver')
+
+        if 'error' in res:
+            return to_json(res)
+
+        for x in range(0, 5):
+            count = app.shepherd.redis.publish(AUTO_EVENT.format(reqid=reqid), json.dumps({'cmd': 'start'}))
+            if count:
+                return to_json({'success': True})
+
+            time.sleep(1.0)
+
+        return to_json({'error': 'not_started'})
+
+    @app.route('/api/behavior/stop/<reqid>', methods=['POST'])
+    def auto_stop(reqid):
+        count = app.shepherd.redis.publish(AUTO_EVENT.format(reqid=reqid), json.dumps({'cmd': 'stop'}))
+        if count:
+            return to_json({'success': True})
+        else:
+            return to_json({'error': 'not_started'})
+
+
+def to_json(data):
+    return Response(json.dumps(data), mimetype='application/json')
 
 
 # ============================================================================

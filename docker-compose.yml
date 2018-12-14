@@ -1,0 +1,37 @@
+version: '3.5'
+
+services:
+    browser-shepherd:
+        image: oldwebtoday/shepherd:v2
+        build: ./
+
+        environment:
+            - REDIS_BROWSER_URL=redis://redis/0
+            - IDLE_TIMEOUT=60
+            - BROWSER_NET=browser-shepherd-default
+            - PROXY_HOST=
+          
+        depends_on:
+            - redis
+
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
+        ports:
+            - 9020:9020
+
+        networks:
+          - browser-shepherd-default
+
+
+    redis:
+        image: redis:3.2.4
+        networks:
+          - browser-shepherd-default
+
+
+networks:
+  browser-shepherd-default:
+    name: browser-shepherd-default
+
+
