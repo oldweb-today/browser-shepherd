@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
     browser-shepherd:
-        image: oldwebtoday/shepherd:v2
+        image: oldwebtoday/browser-shepherd
         build: ./
 
         environment:
@@ -28,7 +28,6 @@ services:
         image: redis:3.2.4
         networks:
           - browser-shepherd-default
-
 
 networks:
   browser-shepherd-default:

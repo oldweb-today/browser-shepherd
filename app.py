@@ -1,7 +1,7 @@
 from gevent.monkey import patch_all; patch_all()
 
 from shepherd.wsgi import create_app
-from shepherd.shepherd import Shepherd
+from shepherd.shepherd import Shepherd, FlockRequest
 
 from shepherd.schema import Schema, fields, GenericResponseSchema
 import marshmallow.utils
@@ -39,7 +39,7 @@ def main():
     shepherd.load_flocks(FLOCKS)
 
     fixed_pool = FixedSizePool('fixed-pool', shepherd, redis,
-                               duration=1800,
+                               duration=300,
                                max_size=50,
                                expire_check=30,
                                number_ttl=120)
@@ -194,6 +194,7 @@ def init_routes(app, browser_utils):
         url = url or user_params.get('url')
 
         env = {'URL': url,
+               'VNC_PASS': base64.b64encode(os.urandom(21)).decode('utf-8')
                #'IDLE_TIMEOUT': os.environ.get('IDLE_TIMEOUT')
               }
 
@@ -226,13 +227,15 @@ def init_routes(app, browser_utils):
             environ['AUDIO_TYPE'] = audio
 
         # vnc password
-        vnc_pass = base64.b64encode(os.urandom(21)).decode('utf-8')
-        environ['VNC_PASS'] = vnc_pass
-
         res = app.get_pool(DEFAULT_POOL).start(reqid, environ=environ)
 
         if 'error' in res or 'queued' in res:
             return res
+
+        flock_req = FlockRequest(reqid)
+        flock_req.load(app.shepherd.redis)
+
+        vnc_pass = flock_req.data['environ'].get('VNC_PASS', 'secret')
 
         browser_res = {'id': reqid,
                        'cmd_port': res['containers']['xserver']['ports']['cmd_port'],
