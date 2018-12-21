@@ -31,7 +31,9 @@ containers:
     external_network: '${MAIN_NET}'
 
     environment:
+      # defaults for standalone use
       BROWSER_HOST: 'browser'
       REDIS_URL: 'redis://redis:6379/0'
-
+      TAB_TYPE: 'BehaviorTab'
+      
 

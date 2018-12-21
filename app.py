@@ -26,12 +26,14 @@ DEFAULT_POOL = 'fixed-pool'
 
 DEFAULT_FLOCK = os.environ.get('DEFAULT_FLOCK', 'browsers-vnc')
 
+INACTIVE_SECS = int(os.environ.get('INACTIVE_SECS', '0'))
+
 AUTO_EVENT = 'wr.auto-event:{reqid}'
 
 
 # ============================================================================
 def main():
-    redis_url = os.environ.get('REDIS_BROWSER_URL', 'redis://localhost/0')
+    redis_url = os.environ.get('REDIS_BROWSER_URL', 'redis://redis/0')
 
     redis = StrictRedis.from_url(redis_url, decode_responses=True)
 
@@ -39,8 +41,8 @@ def main():
     shepherd.load_flocks(FLOCKS)
 
     fixed_pool = FixedSizePool('fixed-pool', shepherd, redis,
-                               duration=300,
-                               max_size=50,
+                               duration=os.environ.get('CONTAINER_EXPIRE_SECS', 300),
+                               max_size=os.environ.get('MAX_SIZE', 10),
                                expire_check=30,
                                number_ttl=120)
 
@@ -189,7 +191,7 @@ class BrowserShepherdUtils():
 def init_routes(app, browser_utils):
     def do_request_browser(browser, url=None, user_params=None, flock=DEFAULT_FLOCK):
         user_params = user_params or {}
-        user_params['browser'] = browser_utils.browser_image_prefix + browser
+        browser_image = browser_utils.browser_image_prefix + browser
 
         url = url or user_params.get('url')
 
@@ -199,7 +201,7 @@ def init_routes(app, browser_utils):
               }
 
         opts = {}
-        opts['overrides'] = {'browser': user_params['browser']}
+        opts['overrides'] = {'browser': browser_image}
         opts['environ'] = env
         opts['user_params'] = user_params
 
@@ -207,7 +209,7 @@ def init_routes(app, browser_utils):
 
         return res
 
-    @app.route('/init_browser', methods=['GET'],
+    @app.route(['/init_browser', '/api/browsers/init_browser'], methods=['GET'],
                resp_schema=InitBrowserSchema)
     def init_browser():
         reqid = request.args.get('reqid')
@@ -249,7 +251,7 @@ def init_routes(app, browser_utils):
 
     @app.route('/attach/<reqid>')
     def attach(reqid):
-        return render_template('browser_embed.html', reqid=reqid)
+        return render_template('browser_embed.html', reqid=reqid, inactive_secs=INACTIVE_SECS)
 
     @app.route('/view/<browser>/<path:url>')
     @app.route('/view/<flock>/<browser>/<path:url>')
@@ -266,10 +268,10 @@ def init_routes(app, browser_utils):
         if not reqid:
             return Response('Error Has Occured: ' + str(res), status=400)
 
-        return render_template('browser_embed.html', reqid=reqid)
+        return render_template('browser_embed.html', reqid=reqid, inactive_secs=INACTIVE_SECS)
 
 
-    @app.route('/request_browser/<browser>', methods=['POST'],
+    @app.route(['/request_browser/<browser>', '/api/v1/browsers/request/<browser>'], methods=['POST'],
                resp_schema=RequestBrowserSchema)
     def request_browser(browser):
         try:

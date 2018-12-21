@@ -10,7 +10,7 @@
 
 <script src="/static/shepherd-client.bundle.js"></script>
 <script>
-InitBrowserDefault("{{ reqid }}", {"id": "#browser"});
+InitBrowserDefault("{{ reqid }}", {"id": "#browser", "inactiveSecs": {{ inactive_secs or 0 }} });
 </script>
 
 </head>
