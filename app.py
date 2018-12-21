@@ -197,8 +197,11 @@ def init_routes(app, browser_utils):
 
         env = {'URL': url,
                'VNC_PASS': base64.b64encode(os.urandom(21)).decode('utf-8')
-               #'IDLE_TIMEOUT': os.environ.get('IDLE_TIMEOUT')
               }
+
+        idle_timeout = os.environ.get('IDLE_TIMEOUT')
+        if idle_timeout:
+            env['IDLE_TIMEOUT'] = idle_timeout
 
         opts = {}
         opts['overrides'] = {'browser': browser_image}
