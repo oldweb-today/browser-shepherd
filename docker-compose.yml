@@ -16,6 +16,7 @@ services:
 
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - ./static/:/app/static
 
         ports:
             - 9020:9020

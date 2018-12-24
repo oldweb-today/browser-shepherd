@@ -5,7 +5,8 @@ volumes:
 
 containers:
   - name: xserver
-    image: oldwebtoday/vnc-ws-audio
+    #image: oldwebtoday/vnc-ws-audio
+    image: oldwebtoday/vnc-webrtc-audio
     ports:
       vnc_port: 6080
       cmd_port: 6082
