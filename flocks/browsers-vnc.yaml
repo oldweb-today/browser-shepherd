@@ -10,6 +10,11 @@ containers:
     ports:
       vnc_port: 6080
       cmd_port: 6082
+      ice_tcp_port: 10235/tcp
+      ice_udp_port: 10235/udp
+
+    environment:
+      LOCAL_HOST: '192.168.1.8'
 
   - name: browser
     image: oldwebtoday/base-browser

@@ -71,6 +71,8 @@ class InitBrowserSchema(Schema):
     vnc_pass = fields.String()
     cmd_port = fields.Int()
     vnc_port = fields.Int()
+    ice_tcp_port = fields.Int()
+    ice_udp_port = fields.Int()
     queued = fields.Int()
 
 class RequestBrowserSchema(GenericResponseSchema):
@@ -245,6 +247,8 @@ def init_routes(app, browser_utils):
         browser_res = {'id': reqid,
                        'cmd_port': res['containers']['xserver']['ports']['cmd_port'],
                        'vnc_port': res['containers']['xserver']['ports']['vnc_port'],
+                       'ice_tcp_port': res['containers']['xserver']['ports']['ice_tcp_port'],
+                       'ice_udp_port': res['containers']['xserver']['ports']['ice_udp_port'],
                        'ip': res['containers']['browser']['ip'],
                        'vnc_pass': vnc_pass,
                        'audio': audio,
