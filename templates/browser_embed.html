@@ -12,7 +12,9 @@
 <script>
 InitBrowserDefault("{{ reqid }}", {"id": "#browser",
                                    "inactiveSecs": {{ inactive_secs or 0 }},
-                                   "audio": "wait_for_click"});
+                                   "audio": "wait_for_click",
+                                   "webrtc": true,
+                                   "webrtcHostIP": "{{ webrtc_host_ip }}"});
 </script>
 
 </head>

@@ -1,15 +1,19 @@
-name: auto-browsers-vnc
-auto_remove: false
+name: browsers
 
 volumes:
   tmpdir: '/tmp/.X11-unix'
 
 containers:
   - name: xserver
-    image: oldwebtoday/vnc-ws-audio
+    image: oldwebtoday/base-displayaudio
     ports:
       vnc_port: 6080
       cmd_port: 6082
+      ice_tcp_port: 10235
+      ice_udp_port: '10235/udp'
+
+    environment:
+      VNC_PASS: ${rand}
 
   - name: browser
     image: oldwebtoday/base-browser

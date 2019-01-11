@@ -10,6 +10,7 @@ services:
             - IDLE_TIMEOUT=60
             - BROWSER_NET=browser-shepherd-default
             - PROXY_HOST=
+            - WEBRTC_HOST_IP=127.0.0.1
           
         depends_on:
             - redis

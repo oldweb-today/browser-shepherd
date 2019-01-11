@@ -1,1 +1,1 @@
-shepherd>=1.0.1
+git+https://github.com/oldweb-today/shepherd.git@persist-cleanup#egg=shepherd

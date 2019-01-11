@@ -22,13 +22,17 @@ import time
 NETWORK_NAME = 'shep-browsers:{0}'
 FLOCKS = 'flocks'
 
-DEFAULT_POOL = 'fixed-pool'
+DEFAULT_POOL = ''
 
-DEFAULT_FLOCK = os.environ.get('DEFAULT_FLOCK', 'browsers-vnc')
+DEFAULT_FLOCK = os.environ.get('DEFAULT_FLOCK', 'browsers')
+
+DISPLAY_IMAGE = 'oldwebtoday/vnc-webrtc-audio'
 
 INACTIVE_SECS = int(os.environ.get('INACTIVE_SECS', '0'))
 
 AUTO_EVENT = 'wr.auto-event:{reqid}'
+
+WEBRTC_HOST_IP = os.environ.get('WEBRTC_HOST_IP', '')
 
 
 # ============================================================================
@@ -52,7 +56,7 @@ def main():
                                   expire_check=30,
                                   grace_time=1)
 
-    pools = {'fixed-pool': fixed_pool,
+    pools = {DEFAULT_POOL: fixed_pool,
              'auto-pool': persist_pool}
 
     wsgi_app = create_app(shepherd, pools, name=__name__)
@@ -204,7 +208,9 @@ def init_routes(app, browser_utils):
             env['IDLE_TIMEOUT'] = idle_timeout
 
         opts = {}
-        opts['overrides'] = {'browser': browser_image}
+        opts['overrides'] = {'browser': browser_image,
+                             'xserver': DISPLAY_IMAGE}
+
         opts['environ'] = env
         opts['user_params'] = user_params
 
@@ -212,49 +218,9 @@ def init_routes(app, browser_utils):
 
         return res
 
-    @app.route(['/init_browser', '/api/browsers/init_browser'], methods=['GET'],
-               resp_schema=InitBrowserSchema)
-    def init_browser():
-        reqid = request.args.get('reqid')
-
-        width = request.args.get('width')
-        height = request.args.get('height')
-        audio = request.args.get('audio')
-
-        environ = {'REQ_ID': reqid}
-        if width:
-            environ['SCREEN_WIDTH'] = width
-
-        if height:
-            environ['SCREEN_HEIGHT'] = height
-
-        if audio:
-            environ['AUDIO_TYPE'] = audio
-
-        # vnc password
-        res = app.get_pool(DEFAULT_POOL).start(reqid, environ=environ)
-
-        if 'error' in res or 'queued' in res:
-            return res
-
-        flock_req = FlockRequest(reqid)
-        flock_req.load(app.shepherd.redis)
-
-        vnc_pass = flock_req.data['environ'].get('VNC_PASS', 'secret')
-
-        browser_res = {'id': reqid,
-                       'cmd_port': res['containers']['xserver']['ports']['cmd_port'],
-                       'vnc_port': res['containers']['xserver']['ports']['vnc_port'],
-                       'ip': res['containers']['browser']['ip'],
-                       'vnc_pass': vnc_pass,
-                       'audio': audio,
-                      }
-
-        return browser_res
-
     @app.route('/attach/<reqid>')
     def attach(reqid):
-        return render_template('browser_embed.html', reqid=reqid, inactive_secs=INACTIVE_SECS)
+        return  render(reqid)
 
     @app.route('/view/<browser>/<path:url>')
     @app.route('/view/<flock>/<browser>/<path:url>')
@@ -271,8 +237,7 @@ def init_routes(app, browser_utils):
         if not reqid:
             return Response('Error Has Occured: ' + str(res), status=400)
 
-        return render_template('browser_embed.html', reqid=reqid, inactive_secs=INACTIVE_SECS)
-
+        return render(reqid)
 
     @app.route(['/request_browser/<browser>', '/api/v1/browsers/request/<browser>'], methods=['POST'],
                resp_schema=RequestBrowserSchema)
@@ -356,6 +321,12 @@ def init_routes(app, browser_utils):
 
 def to_json(data):
     return Response(json.dumps(data), mimetype='application/json')
+
+
+def render(reqid):
+    return render_template('browser_embed.html', reqid=reqid,
+                                                 inactive_secs=INACTIVE_SECS,
+                                                 webrtc_host_ip=WEBRTC_HOST_IP)
 
 
 # ============================================================================
