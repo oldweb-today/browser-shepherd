@@ -34,6 +34,8 @@ AUTO_EVENT = 'wr.auto-event:{reqid}'
 
 WEBRTC_HOST_IP = os.environ.get('WEBRTC_HOST_IP', '')
 
+QUEUE_PING_TTL = os.environ.get('QUEUE_PING_TTL', 30)
+
 
 # ============================================================================
 def main():
@@ -48,7 +50,7 @@ def main():
                                duration=os.environ.get('CONTAINER_EXPIRE_SECS', 300),
                                max_size=os.environ.get('MAX_SIZE', 10),
                                expire_check=30,
-                               number_ttl=120)
+                               number_ttl=QUEUE_PING_TTL)
 
     persist_pool = PersistentPool('auto-pool', shepherd, redis,
                                   duration=1800,

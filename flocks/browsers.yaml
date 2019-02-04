@@ -1,4 +1,5 @@
 name: browsers
+auto_remove: false
 
 volumes:
   tmpdir: '/tmp/.X11-unix'
@@ -11,9 +12,6 @@ containers:
       cmd_port: 6082
       ice_tcp_port: 10235
       ice_udp_port: '10235/udp'
-
-    environment:
-      VNC_PASS: ${rand}
 
   - name: browser
     image: oldwebtoday/base-browser
