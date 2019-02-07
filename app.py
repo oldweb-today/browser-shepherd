@@ -17,6 +17,7 @@ import base64
 import json
 import traceback
 import time
+import logging
 
 
 NETWORK_NAME = 'shep-browsers:{0}'
@@ -39,6 +40,12 @@ QUEUE_PING_TTL = os.environ.get('QUEUE_PING_TTL', 30)
 
 # ============================================================================
 def main():
+    logging.basicConfig(format='%(asctime)s: [%(levelname)s]: %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.INFO)
+
+    logging.getLogger('shepherd.pool').setLevel(logging.DEBUG)
+
     redis_url = os.environ.get('REDIS_BROWSER_URL', 'redis://redis/0')
 
     redis = StrictRedis.from_url(redis_url, decode_responses=True)

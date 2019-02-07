@@ -1,1 +1,2 @@
-shepherd
+git+https://github.com/oldweb-today/shepherd.git@master#egg=shepherd
+
