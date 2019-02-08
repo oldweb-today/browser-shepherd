@@ -46,6 +46,7 @@ def main():
                         datefmt='%Y-%m-%d %H:%M:%S',
                         level=logging.INFO)
 
+    logging.getLogger('shepherd').setLevel(logging.DEBUG)
     logging.getLogger('shepherd.pool').setLevel(logging.DEBUG)
 
     redis = StrictRedis.from_url(REDIS_URL, decode_responses=True)
