@@ -37,6 +37,8 @@ WEBRTC_HOST_IP = os.environ.get('WEBRTC_HOST_IP', '')
 
 QUEUE_PING_TTL = os.environ.get('QUEUE_PING_TTL', 30)
 
+REDIS_URL = os.environ.get('REDIS_BROWSER_URL', 'redis://redis/0')
+
 
 # ============================================================================
 def main():
@@ -46,9 +48,7 @@ def main():
 
     logging.getLogger('shepherd.pool').setLevel(logging.DEBUG)
 
-    redis_url = os.environ.get('REDIS_BROWSER_URL', 'redis://redis/0')
-
-    redis = StrictRedis.from_url(redis_url, decode_responses=True)
+    redis = StrictRedis.from_url(REDIS_URL, decode_responses=True)
 
     shepherd = Shepherd(redis, NETWORK_NAME)
     shepherd.load_flocks(FLOCKS)
@@ -209,7 +209,8 @@ def init_routes(app, browser_utils):
         url = url or user_params.get('url')
 
         env = {'URL': url,
-               'VNC_PASS': base64.b64encode(os.urandom(21)).decode('utf-8')
+               'VNC_PASS': base64.b64encode(os.urandom(21)).decode('utf-8'),
+               'REDIS_URL': REDIS_URL,
               }
 
         idle_timeout = os.environ.get('IDLE_TIMEOUT')
