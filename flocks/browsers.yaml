@@ -37,5 +37,6 @@ containers:
       BROWSER_HOST: 'browser'
       REDIS_URL: 'redis://redis:6379/0'
       TAB_TYPE: 'BehaviorTab'
+      BEHAVIOR_API_URL: 'http://behaviors:3030'
       
 
