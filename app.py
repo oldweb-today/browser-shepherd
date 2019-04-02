@@ -23,7 +23,7 @@ import logging
 NETWORK_NAME = 'shep-browsers:{0}'
 FLOCKS = 'flocks'
 
-DEFAULT_POOL = ''
+DEFAULT_POOL = 'fixed-pool'
 
 DEFAULT_FLOCK = os.environ.get('DEFAULT_FLOCK', 'browsers')
 
@@ -102,7 +102,6 @@ class AnySchema(Schema):
 # ============================================================================
 class BrowserShepherdUtils():
     browser_image_prefix = 'oldwebtoday/'
-    label_name = 'wr.shepherd_name'
     label_browser = 'wr.name'
     label_prefix = 'wr.'
 
@@ -225,7 +224,7 @@ def init_routes(app, browser_utils):
         opts['environ'] = env
         opts['user_params'] = user_params
 
-        res = app.get_pool(DEFAULT_POOL).request(flock, opts)
+        res = app.get_pool(pool=DEFAULT_POOL).request(flock, opts)
 
         return res
 
@@ -275,7 +274,7 @@ def init_routes(app, browser_utils):
 
     @app.route('/info/<reqid>', resp_schema=InitBrowserSchema)
     def info(reqid):
-        res = app.get_pool(DEFAULT_POOL).start(reqid)
+        res = app.get_pool(reqid=reqid).start(reqid)
         return {'ip': res['containers']['browser']['ip']}
 
 
@@ -307,7 +306,7 @@ def init_routes(app, browser_utils):
         if count:
             return to_json({'success': True})
 
-        res = app.get_pool(DEFAULT_POOL).start_deferred_container(reqid, 'autodriver')
+        res = app.get_pool(reqid=reqid).start_deferred_container(reqid, 'autodriver')
 
         if 'error' in res:
             return to_json(res)
