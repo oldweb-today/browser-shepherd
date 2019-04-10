@@ -24,7 +24,8 @@ containers:
 
       PROXY_HOST: '${PROXY_HOST}'
       PROXY_PORT: '${PROXY_PORT}'
-      PROXY_GET_CA: 'http://wsgiprox/download/pem'
+      PROXY_CA_URL: 'http://wsgiprox/download/pem'
+      PROXY_CA_FILE: '/tmp/proxy-ca.pem'
 
   - name: autodriver
     image: webrecorder/autobrowser
